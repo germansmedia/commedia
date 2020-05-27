@@ -1,0 +1,3 @@
+[submodule "math"]
+	path = math
+	url = http://github.com/germansmedia/math
