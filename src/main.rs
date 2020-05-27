@@ -1,5 +1,5 @@
+// (C) Copyright 2020, by Germans Media Technology & Services
 // Commedia
-// by Desmond Germans
 
 use std::fs;
 use std::io::prelude::*;

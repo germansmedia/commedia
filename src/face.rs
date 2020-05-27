@@ -1,6 +1,6 @@
-// Social Robotics Platform 04
-// Desmond Germans, Ph.D
-// face drawing graphics
+// (C) Copyright 2020, by Germans Media Technology & Services
+// Commedia
+// Face rendering
 
 use std::{fs,io,ffi};
 use std::io::prelude::*;

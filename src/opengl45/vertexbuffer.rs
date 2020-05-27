@@ -1,6 +1,6 @@
-// Social Robotics Platform 03
-// Desmond Germans, Ph.D
-// OpenGL 4.5 2D vertex buffer
+// (C) Copyright 2020, by Germans Media Technology & Services
+// Commedia
+// OpenGL 4.5 Vertexbuffer
 
 use crate::math::*;
 use std::{marker,mem};

@@ -1,5 +1,5 @@
-// Social Robotics Platform 04
-// Desmond Germans, Ph.D
+// (C) Copyright 2020, by Germans Media Technology & Services
+// Commedia
 // OpenGL 4.5
 
 mod shader;

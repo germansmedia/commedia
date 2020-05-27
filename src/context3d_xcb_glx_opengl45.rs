@@ -1,5 +1,5 @@
-// Social Robotics Platform 04
-// Desmond Germans, Ph.D
+// (C) Copyright 2020, by Germans Media Technology & Services
+// Commedia
 // Context3D for Linux with XCB using glX, exposing OpenGL 4.5
 
 use std::{ffi,os,ptr,fmt};

@@ -1,5 +1,6 @@
-// YAML config loader
-// by Desmond Germans
+// (C) Copyright 2020, by Germans Media Technology & Services
+// Commedia
+// YAML Config file loader
 
 use std::fs::File;
 use std::io::{BufRead,BufReader,Lines};
