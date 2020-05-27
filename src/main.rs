@@ -342,9 +342,17 @@ fn process(rng: &mut rand::rngs::ThreadRng,ctx: &Context,session: &Session,backg
 }
 
 fn main() {
-
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() < 2 {
+        println!("usage:");
+        println!("");
+        println!("    commedia <file>");
+        println!("");
+        println!("where <file> is the config file.");
+        return;
+    }
     let mut rng = rand::thread_rng();
-    let sessions = load_config("config.yaml").expect("unable to load config file");
+    let sessions = load_config(&args[1]).expect("unable to load config file");
     for session in sessions {
 
         println!("session: {}",session.name);
