@@ -184,6 +184,15 @@ impl SetUniform<f32m4x4> for ShaderProgram {
     }
 }
 
+impl SetUniform<f32xy> for ShaderProgram {
+    fn set_uniform(&self,name: &str,value: f32xy) {
+        let cname = CString::new(name).unwrap();
+        unsafe {
+            gl::Uniform2fv(gl::GetUniformLocation(self.sp,cname.as_ptr() as *const GLchar),1,&value as *const f32xy as *const GLfloat);
+        }
+    }
+}
+
 impl SetUniform<f32xyz> for ShaderProgram {
     fn set_uniform(&self,name: &str,value: f32xyz) {
         let cname = CString::new(name).unwrap();

@@ -80,9 +80,9 @@ my_session:
 `style` can be one of four possibilities:
 
 - `still`: generate only 2D still images (default).
-- `still_depth`: generate 3D still images (with depth channel) (TODO).
+- `still_depth a,b`: generate 3D still images with depth in the alpha channel. The pixel depth is multiplied by `a` and offset by `b` to generate the value for the alpha channel.
 - `moving`: generate 2D movies consisting of several frames (TODO).
-- `moving_depth`: generate 3D movies consisting of several frames, with depth (TODO).
+- `moving_depth a,b`: generate 3D movies consisting of several frames, with depth (TODO). The pixel depth is multiplied by `a` and offset by `b` to generate the value for the alpha channel.
 
 `format` indicates which output format to use:
 

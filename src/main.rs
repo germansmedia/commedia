@@ -57,18 +57,21 @@ fn downsample4(image: Image<ARGB8>) -> Image<ARGB8> {
             let mut r = 0usize;
             let mut g = 0usize;
             let mut b = 0usize;
+            let mut a = 0usize;
             for i in 0..4 {
                 for k in 0..4 {
                     let pix = image.pixel(usizexy::new(x * 4 + k,y * 4 + i));
                     r += pix.r as usize;
                     g += pix.g as usize;
                     b += pix.b as usize;
+                    a += pix.a as usize;
                 }
             }
             r /= 16;
             g /= 16;
             b /= 16;
-            *dst.pixel_mut(usizexy::new(x,y)) = ARGB8::new_rgb(r as u8,g as u8,b as u8);
+            a /= 16;
+            *dst.pixel_mut(usizexy::new(x,y)) = ARGB8::new_rgba(r as u8,g as u8,b as u8,a as u8);
         }
     }
     dst
@@ -115,6 +118,20 @@ fn render_full(rng: &mut rand::rngs::ThreadRng,ctx: &Context,session: &Session,i
     let head_matrix = f32m4x4::translate(instance.head_pos) * f32m4x4::yaw(instance.head_dir.y) * f32m4x4::pitch(instance.head_dir.p);
     let lefteye_matrix = f32m4x4::translate(LEFT_EYE_POS) * f32m4x4::yaw(instance.lefteye.y) * f32m4x4::pitch(instance.lefteye.p) * f32m4x4::scale(EYE_SIZE);
     let righteye_matrix = f32m4x4::translate(RIGHT_EYE_POS) * f32m4x4::yaw(instance.righteye.y) * f32m4x4::pitch(instance.righteye.p) * f32m4x4::scale(EYE_SIZE);
+    let depth_map = match session.style {
+        SessionStyle::Still => {
+            f32xy { x: 1.0,y: 0.0, }
+        },
+        SessionStyle::StillDepth(scale,offset) => {
+            f32xy { x: offset,y: scale, }
+        },
+        SessionStyle::Moving => {
+            f32xy { x: 1.0,y: 0.0, }
+        },
+        SessionStyle::MovingDepth(scale,offset) => {
+            f32xy { x: offset,y: scale, }
+        },
+    };
 
     // clear or draw background
     match &instance.background {
@@ -141,9 +158,9 @@ fn render_full(rng: &mut rand::rngs::ThreadRng,ctx: &Context,session: &Session,i
     // draw eyes and face
     unsafe {
         gl::Enable(gl::DEPTH_TEST);
-        ctx.eye.render_full(session.projection,head_matrix * lefteye_matrix,light_dir,instance.light_color,instance.ambient_color,instance.sclera_color,instance.iris_color);
-        ctx.eye.render_full(session.projection,head_matrix * righteye_matrix,light_dir,instance.light_color,instance.ambient_color,instance.sclera_color,instance.iris_color);
-        ctx.skin.render_full(session.projection,head_matrix,light_dir,instance.light_color,instance.ambient_color,instance.skin_color);
+        ctx.eye.render_full(session.projection,head_matrix * lefteye_matrix,light_dir,instance.light_color,instance.ambient_color,instance.sclera_color,instance.iris_color,depth_map);
+        ctx.eye.render_full(session.projection,head_matrix * righteye_matrix,light_dir,instance.light_color,instance.ambient_color,instance.sclera_color,instance.iris_color,depth_map);
+        ctx.skin.render_full(session.projection,head_matrix,light_dir,instance.light_color,instance.ambient_color,instance.skin_color,depth_map);
         gl::Disable(gl::DEPTH_TEST);
         gl::Finish();
         gl::Flush();
@@ -377,13 +394,13 @@ fn main() {
             SessionStyle::Still => {
                 println!("    generating {} images",session.count);
             },
-            SessionStyle::StillDepth => {
+            SessionStyle::StillDepth(_scale,_offset) => {
                 println!("    generating {} images with depth",session.count);
             },
             SessionStyle::Moving => {
                 println!("    generating {} movies",session.count);
             },
-            SessionStyle::MovingDepth => {
+            SessionStyle::MovingDepth(_scale,_offset) => {
                 println!("    generating {} movies with depth",session.count);
             }
         }

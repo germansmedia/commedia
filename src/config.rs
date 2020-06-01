@@ -81,10 +81,10 @@ pub enum SessionPath {
 
 #[derive(Debug)]
 pub enum SessionStyle {
-    Still,        // still image per instance
-    StillDepth,   // still image + depth per instance
-    Moving,       // sequences of still images per instance
-    MovingDepth,  // sequences of still images + depth per instance
+    Still,                 // still image per instance
+    StillDepth(f32,f32),   // still image + depth per instance
+    Moving,                // sequences of still images per instance
+    MovingDepth(f32,f32),  // sequences of still images + depth per instance
 }
 
 #[derive(Debug)]
@@ -176,7 +176,6 @@ fn parse_distribution(parser: &mut Parser) -> Option<SessionDistribution> {
             Some(SessionDistribution::Constant(value))
         }
         else {
-            println!("line {}: constant or normal distribution expected",parser.linenr);
             None
         }
     }
@@ -497,16 +496,28 @@ pub fn load_config(name: &str) -> Option<Vec<Session>> {
                     parser.accept();
                 },
                 "style" => {
-                    session.style = match line.value.as_str() {
-                        "still" => SessionStyle::Still,
-                        "still_depth" => SessionStyle::StillDepth,
-                        "moving" => SessionStyle::Moving,
-                        "moving_depth" => SessionStyle::MovingDepth,
-                        _ => {
-                            println!("line {}: invalid session style (should be still, still_depth, moving or moving_depth)",parser.linenr);
-                            return None;
-                        },
-                    };
+                    if line.value.starts_with("still_depth") {
+                        let comp: Vec<&str> = line.value["still_depth".len()..].split(',').collect();
+                        let scale = comp[0].trim().parse::<f32>().unwrap();
+                        let offset = comp[1].trim().parse::<f32>().unwrap();
+                        session.style = SessionStyle::StillDepth(scale,offset);
+                    }
+                    else if line.value.starts_with("moving_depth") {
+                        let comp: Vec<&str> = line.value["moving_depth".len()..].split(',').collect();
+                        let scale = comp[0].trim().parse::<f32>().unwrap();
+                        let offset = comp[1].trim().parse::<f32>().unwrap();
+                        session.style = SessionStyle::MovingDepth(scale,offset);
+                    }
+                    else if line.value == "still" {
+                        session.style = SessionStyle::Still;
+                    }
+                    else if line.value == "moving" {
+                        session.style = SessionStyle::Moving;
+                    }
+                    else {
+                        println!("line {}: invalid session style (should be still, still_depth, moving or moving_depth)",parser.linenr);
+                        return None;
+                    }
                     parser.accept();
                 },
                 "format" => {
@@ -523,8 +534,8 @@ pub fn load_config(name: &str) -> Option<Vec<Session>> {
                 },
                 "size" => {
                     let comp: Vec<&str> = line.value.split(',').collect();
-                    session.size.x = comp[0].parse::<usize>().unwrap();
-                    session.size.y = comp[1].parse::<usize>().unwrap();
+                    session.size.x = comp[0].trim().parse::<usize>().unwrap();
+                    session.size.y = comp[1].trim().parse::<usize>().unwrap();
                     parser.accept();
                 },
                 "projection" => {
@@ -535,18 +546,18 @@ pub fn load_config(name: &str) -> Option<Vec<Session>> {
                             println!("line {}: perspective has 4 parameters: fovy, aspect, near and far",parser.linenr);
                             return None;
                         }
-                        let fovy = comp[0].parse::<f32>().unwrap();
+                        let fovy = comp[0].trim().parse::<f32>().unwrap();
                         let aspect = if comp[1].contains('/') {
                             let vals: Vec<&str> = comp[1].split('/').collect();
-                            let num = vals[0].parse::<f32>().unwrap();
-                            let den = vals[1].parse::<f32>().unwrap();
+                            let num = vals[0].trim().parse::<f32>().unwrap();
+                            let den = vals[1].trim().parse::<f32>().unwrap();
                             num / den
                         }
                         else {
                             comp[1].parse::<f32>().unwrap()
                         };
-                        let near = comp[2].parse::<f32>().unwrap();
-                        let far = comp[3].parse::<f32>().unwrap();
+                        let near = comp[2].trim().parse::<f32>().unwrap();
+                        let far = comp[3].trim().parse::<f32>().unwrap();
                         f32m4x4::perspective(fovy,aspect,near,far)
                     }
                     else {

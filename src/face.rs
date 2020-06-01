@@ -100,6 +100,7 @@ impl Skin {
         let fs_full = FragmentShader::new(r#"
             #version 420 core
 
+            uniform vec2 u_depth_map;
             uniform vec4 u_ambient_color;
             uniform vec4 u_skin_color;
             uniform vec4 u_light_color;
@@ -119,7 +120,9 @@ impl Skin {
                 float s = max(pow(dot(rn,pun),16.0),0.0);
                 float d = clamp(dot(n,u_light_dir),0.0,1.0);
                 vec3 res = u_ambient_color.xyz * u_skin_color.xyz + d * u_light_color.xyz * u_skin_color.xyz + 0.4 * s * u_light_color.xyz;
-                o_frag = vec4(res,1.0);
+                float z = gl_FragCoord.z / gl_FragCoord.w;
+                float a = u_depth_map.y * z + u_depth_map.x;
+                o_frag = vec4(res,a);
             }
         "#).expect("Unable to create fragment shader.");
         let fs_spec = FragmentShader::new(r#"
@@ -144,7 +147,7 @@ impl Skin {
         }
     }
 
-    pub fn render_full(&self,projection_matrix: f32m4x4,modelview_matrix: f32m4x4,light_dir: f32xyz,light_color: f32rgb,ambient_color: f32rgb,skin_color: f32rgb) {
+    pub fn render_full(&self,projection_matrix: f32m4x4,modelview_matrix: f32m4x4,light_dir: f32xyz,light_color: f32rgb,ambient_color: f32rgb,skin_color: f32rgb,depth_map: f32xy) {
         let normal_matrix = f32m3x3::normal_from(modelview_matrix);
         unsafe {
             self.full_shader.bind();
@@ -155,6 +158,7 @@ impl Skin {
             self.full_shader.set_uniform("u_skin_color",skin_color);
             self.full_shader.set_uniform("u_light_color",light_color);
             self.full_shader.set_uniform("u_light_dir",light_dir);
+            self.full_shader.set_uniform("u_depth_map",depth_map);
             self.skin.bind();
             gl::DrawElements(gl::TRIANGLES,self.skin.indices() as i32,gl::UNSIGNED_SHORT as u32,0 as *const ffi::c_void);
         }        
@@ -234,6 +238,7 @@ impl Sclera {
             uniform vec4 u_sclera_color;
             uniform vec4 u_light_color;
             uniform vec3 u_light_dir;
+            uniform vec2 u_depth_map;
 
             in vec3 v_pos;
             in vec3 v_normal;
@@ -249,7 +254,9 @@ impl Sclera {
                 float s = max(pow(dot(rn,pun),64.0),0.0);
                 float d = clamp(dot(n,u_light_dir),0.0,1.0);
                 vec3 res = u_ambient_color.xyz * u_sclera_color.xyz + d * u_light_color.xyz * u_sclera_color.xyz;
-                o_frag = vec4(res,1.0);
+                float z = gl_FragCoord.z / gl_FragCoord.w;
+                float a = u_depth_map.y * z + u_depth_map.x;
+                o_frag = vec4(res,a);
             }
         "#).expect("Unable to create fragment shader.");
         let fs_spec = FragmentShader::new(r#"
@@ -272,7 +279,7 @@ impl Sclera {
         }
     }
 
-    pub fn render_full(&self,projection_matrix: f32m4x4,modelview_matrix: f32m4x4,light_dir: f32xyz,light_color: f32rgb,ambient_color: f32rgb,sclera_color: f32rgb) {
+    pub fn render_full(&self,projection_matrix: f32m4x4,modelview_matrix: f32m4x4,light_dir: f32xyz,light_color: f32rgb,ambient_color: f32rgb,sclera_color: f32rgb,depth_map: f32xy) {
         let normal_matrix = f32m3x3::normal_from(modelview_matrix);
         unsafe {
             self.full_shader.bind();
@@ -283,6 +290,7 @@ impl Sclera {
             self.full_shader.set_uniform("u_sclera_color",sclera_color);
             self.full_shader.set_uniform("u_light_color",light_color);
             self.full_shader.set_uniform("u_light_dir",light_dir);
+            self.full_shader.set_uniform("u_depth_map",depth_map);
             self.sclera.bind();
             gl::DrawElements(gl::TRIANGLES,self.sclera.indices() as i32,gl::UNSIGNED_SHORT as u32,0 as *const ffi::c_void);
         }        
@@ -362,6 +370,7 @@ impl Iris {
             uniform vec4 u_iris_color;
             uniform vec4 u_light_color;
             uniform vec3 u_light_dir;
+            uniform vec2 u_depth_map;
 
             in vec3 v_pos;
             in vec3 v_normal;
@@ -373,7 +382,9 @@ impl Iris {
                 vec3 n = normalize(v_normal);
                 float d = clamp(dot(n,u_light_dir),0.0,1.0);
                 vec3 res = u_ambient_color.xyz * u_iris_color.xyz + d * u_light_color.xyz * u_iris_color.xyz;
-                o_frag = vec4(res,1.0);
+                float z = gl_FragCoord.z / gl_FragCoord.w;
+                float a = u_depth_map.y * z + u_depth_map.x;
+                o_frag = vec4(res,a);
             }
         "#).expect("Unable to create fragment shader.");
         let fs_spec = FragmentShader::new(r#"
@@ -396,7 +407,7 @@ impl Iris {
         }
     }
 
-    pub fn render_full(&self,projection_matrix: f32m4x4,modelview_matrix: f32m4x4,light_dir: f32xyz,light_color: f32rgb,ambient_color: f32rgb,iris_color: f32rgb) {
+    pub fn render_full(&self,projection_matrix: f32m4x4,modelview_matrix: f32m4x4,light_dir: f32xyz,light_color: f32rgb,ambient_color: f32rgb,iris_color: f32rgb,depth_map: f32xy) {
         let normal_matrix = f32m3x3::normal_from(modelview_matrix);
         unsafe {
             self.full_shader.bind();
@@ -407,6 +418,7 @@ impl Iris {
             self.full_shader.set_uniform("u_iris_color",iris_color);
             self.full_shader.set_uniform("u_light_color",light_color);
             self.full_shader.set_uniform("u_light_dir",light_dir);
+            self.full_shader.set_uniform("u_depth_map",depth_map);
             self.iris.bind();
             gl::DrawElements(gl::TRIANGLES,self.iris.indices() as i32,gl::UNSIGNED_SHORT as u32,0 as *const ffi::c_void);
         }        
@@ -461,13 +473,17 @@ impl Pupil {
         let fs_full = FragmentShader::new(r#"
             #version 420 core
 
+            uniform vec2 u_depth_map;
+
             in vec3 v_pos;
 
             out vec4 o_frag;
 
             void main(void)
             {
-                o_frag = vec4(0.0,0.0,0.0,1.0);
+                float z = gl_FragCoord.z / gl_FragCoord.w;
+                float a = u_depth_map.y * z + u_depth_map.x;
+                o_frag = vec4(0.0,0.0,0.0,a);
             }
         "#).expect("Unable to create fragment shader.");
         let fs_spec = FragmentShader::new(r#"
@@ -489,11 +505,12 @@ impl Pupil {
         }
     }
 
-    pub fn render_full(&self,projection_matrix: f32m4x4,modelview_matrix: f32m4x4) {
+    pub fn render_full(&self,projection_matrix: f32m4x4,modelview_matrix: f32m4x4,depth_map: f32xy) {
         unsafe {
             self.full_shader.bind();
             self.full_shader.set_uniform("u_projection",projection_matrix);
             self.full_shader.set_uniform("u_modelview",modelview_matrix);
+            self.full_shader.set_uniform("u_depth_map",depth_map);
             self.pupil.bind();
             gl::DrawArrays(gl::TRIANGLE_FAN,0,self.pupil.vertices() as i32);
         }        
@@ -580,6 +597,7 @@ impl Cornea {
 
             uniform vec4 u_light_color;
             uniform vec3 u_light_dir;
+            uniform vec2 u_depth_map;
 
             in vec3 v_pos;
             in vec3 v_normal;
@@ -594,7 +612,9 @@ impl Cornea {
                 vec3 rn = reflect(-u_light_dir,n);
                 float s = max(pow(dot(rn,pun),64.0),0.0);
                 vec3 res = s * u_light_color.xyz;
-                o_frag = vec4(res,1.0);
+                float z = gl_FragCoord.z / gl_FragCoord.w;
+                float a = u_depth_map.y * z + u_depth_map.x;
+                o_frag = vec4(res,a);
             }
         "#).expect("Unable to create fragment shader.");
         Cornea {
@@ -603,7 +623,7 @@ impl Cornea {
         }
     }
 
-    pub fn render_full(&self,projection_matrix: f32m4x4,modelview_matrix: f32m4x4,light_dir: f32xyz,light_color: f32rgb) {
+    pub fn render_full(&self,projection_matrix: f32m4x4,modelview_matrix: f32m4x4,light_dir: f32xyz,light_color: f32rgb,depth_map: f32xy) {
         let normal_matrix = f32m3x3::normal_from(modelview_matrix);
         unsafe {
             self.shader.bind();
@@ -612,6 +632,7 @@ impl Cornea {
             self.shader.set_uniform("u_normal",normal_matrix);
             self.shader.set_uniform("u_light_color",light_color);
             self.shader.set_uniform("u_light_dir",light_dir);
+            self.shader.set_uniform("u_depth_map",depth_map);
             self.cornea.bind();
             gl::DrawElements(gl::TRIANGLES,self.cornea.indices() as i32,gl::UNSIGNED_SHORT as u32,0 as *const ffi::c_void);
         }        
@@ -635,14 +656,14 @@ impl Eye {
         }
     }
 
-    pub fn render_full(&self,projection_matrix: f32m4x4,modelview_matrix: f32m4x4,light_dir: f32xyz,light_color: f32rgb,ambient_color: f32rgb,sclera_color: f32rgb,iris_color: f32rgb,) {
+    pub fn render_full(&self,projection_matrix: f32m4x4,modelview_matrix: f32m4x4,light_dir: f32xyz,light_color: f32rgb,ambient_color: f32rgb,sclera_color: f32rgb,iris_color: f32rgb,depth_map: f32xy) {
         unsafe {
-            self.sclera.render_full(projection_matrix,modelview_matrix,light_dir,light_color,ambient_color,sclera_color);
-            self.iris.render_full(projection_matrix,modelview_matrix,light_dir,light_color,ambient_color,iris_color);
-            self.pupil.render_full(projection_matrix,modelview_matrix);
+            self.sclera.render_full(projection_matrix,modelview_matrix,light_dir,light_color,ambient_color,sclera_color,depth_map);
+            self.iris.render_full(projection_matrix,modelview_matrix,light_dir,light_color,ambient_color,iris_color,depth_map);
+            self.pupil.render_full(projection_matrix,modelview_matrix,depth_map);
             gl::Enable(gl::BLEND);
-            gl::BlendFunc(gl::ONE,gl::ONE);
-            self.cornea.render_full(projection_matrix,modelview_matrix,light_dir,light_color);
+            gl::BlendFuncSeparate(gl::ONE,gl::ONE,gl::ONE,gl::ZERO);
+            self.cornea.render_full(projection_matrix,modelview_matrix,light_dir,light_color,depth_map);
             gl::Disable(gl::BLEND);
         }
     }
